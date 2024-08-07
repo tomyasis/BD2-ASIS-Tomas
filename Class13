@@ -1,0 +1,126 @@
+use sakila;
+
+#Alumno: Asis Tomas 7C
+
+
+
+-- Añadir un nuevo cliente
+-- Almacenar en la tienda 1
+-- Usar una dirección existente en Estados Unidos, la que tenga el mayor address_id
+
+insert into customer(store_id, address_id, first_name, last_name, email) 
+values(1, 
+     (select max(address.address_id) from address
+     inner join city c using (city_id) 
+     inner join country co using (country_id)
+     where co.country = 'United States'), 
+    'TOMAS', 
+    'ASIS', 
+    'tomyasis2005@gmail.com'
+);
+
+
+
+
+
+-- Añadir un alquiler
+-- Permitir seleccionar cualquier título de película, sin verificar si ya está alquilada
+-- Usar cualquier inventario, el de mayor id por ejemplo
+-- Seleccionar cualquier staff_id de la Tienda 2
+
+insert into rental (rental_date, inventory_id, staff_id, customer_id) 
+values(current_date(),
+    (select inventory_id from inventory 
+     inner join film using (film_id)
+     where f.title = 'LION KING' 
+     order by i.inventory_id desc limit 1),
+    (select max(staff_id) from staff where store_id = 2),
+    (select customer_id from customer order by customer_id desc limit 1)
+);
+
+
+
+
+-- Actualizar el año de lanzamiento de la película basado en la calificación
+-- Por ejemplo, si la calificación es 'G', la fecha de lanzamiento será '2001'
+-- Se puede elegir la asignación entre calificación y año
+-- Escribir tantas sentencias como sea necesario
+
+update film
+set release_year = 2020
+where rating = 'PG';
+
+update film
+set release_year = 2012
+where rating = 'G';
+
+update film
+set release_year = 2016
+where rating = 'NC-17';
+
+update film
+set release_year = 1999
+where rating = 'R';
+
+update film
+set release_year = 2003
+where rating = 'NC-17';
+
+select * from film 
+order by rating;
+
+
+
+
+
+
+-- Devolver una película
+-- Escribir las sentencias necesarias para encontrar una película que aún no se ha devuelto y usar ese rental_id
+-- Usar el id para devolver la película
+
+select f.film_id from film as f
+inner join inventory as i using (film_id)
+inner join rental as r using(inventory_id)
+where r.return_date is null
+order by rental_date desc
+limit 1;
+
+
+
+-- Intentar eliminar una película
+-- Verificar qué sucede, describir qué hacer
+-- Escribir todas las sentencias necesarias para eliminar completamente la película de la base de datos
+
+#Error Code: 1451. Cannot delete or update a parent row: a foreign key constraint fails (`sakila`.`film_actor`, CONSTRAINT `fk_film_actor_film` FOREIGN KEY (`film_id`) REFERENCES `film` (`film_id`) ON DELETE RESTRICT ON UPDATE CASCADE)
+delete from film where film_id = 3;
+delete from film_actor where film_id = 3;
+delete from film_category where film_id = 3;
+delete from rental where inventory_id in (select inventory_id from inventory where film_id = 3);
+delete from inventory where film_id = 3;
+delete from film where film_id = 3;
+select * from film 
+order by film_id asc;
+
+
+
+
+
+
+-- Alquilar una película
+-- Encontrar un id de inventario que esté disponible para alquiler (disponible en la tienda), elegir cualquier película
+-- Guardar este id en algún lugar
+-- Añadir una entrada de alquiler
+-- Añadir una entrada de pago
+-- Usar subconsultas para todo, excepto para el id de inventario que puede usarse directamente en las consultas
+
+
+insert into rental (rental_date, inventory_id, customer_id, staff_id) 
+values (current_date(), 
+    (select I.inventory_id from inevntory as I
+    where not exists(select * from rental as r
+		where r.inventory_id = I.inventory_id
+        and r.return_date < current_date())limit 1),1,
+        current_date(), 1);
+
+insert into payment (customer_id, staff_id, rental_id, amount, payment_date)
+values(1, 2, (select LAST_INSERT_ID()), 4.99, current_date)
