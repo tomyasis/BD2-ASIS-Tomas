@@ -1,0 +1,98 @@
+#Alumno:Asis Tomas 7C
+#1
+select concat(cu.first_name, ' ', cu.last_name),a.address, ci.city from customer cu 
+inner join address a using(address_id) 
+inner join city ci using(city_id) 
+inner join country co using(country_id) 
+where co.country='Argentina';
+
+#2
+select title, 
+case rating
+	when 'G' then 'G (General Audiences) – All ages admitted.'
+	when 'PG' then 'PG (Parental Guidance Suggested) – Some material may not be suitable for children.'
+	when 'PG-13' then 'PG-13 (Parents Strongly Cautioned) – Some material may be inappropriate for children under 13.'
+	when 'R' then 'R (Restricted) – Under 17 requires accompanying parent or adult guardian.'
+	when 'NC-17' then 'NC-17 (Adults Only) – No one 17 and under admitted.'
+	else 'Not Rated'
+end as rating_formated,
+l.`name` from film inner join `language` l using(language_id);
+    
+#3
+select f.title, f.release_year, concat(a.first_name, ' ',a.last_name) 
+as nombre from film_actor fa 
+inner join film f using(film_id) 
+inner join actor a using(actor_id) 
+where lower(concat(a.first_name, ' ',a.last_name)) = lower('PENELOPE GUINESS');
+
+#4
+select f.title, c.first_name, case 
+when r.return_date  is not null then 'yes'
+else 'no' end as Returned
+ from rental r 
+ inner join inventory using(inventory_id)
+ inner join film f using(film_id)
+ inner join customer c using(customer_id)
+ where month(rental_date)=5 or month(rental_date)=6;
+ 
+#5
+/*
+Las funciones CAST() y CONVERT() se utilizan para cambiar el tipo de dato de un valor específico.
+Aunque ambas se pueden usar en la mayoría de los casos de manera similar,
+existen algunas diferencias que es importante tener en cuenta:
+La función CAST() permite convertir explícitamente una expresión a un tipo de dato específico. Por ejemplo:
+*/
+select cast(length as nchar(3)) as duracion
+from film;
+/*
+En este ejemplo, la duración de una película se convierte a un tipo de dato NCHAR (National Character).
+
+Por otro lado, la función CONVERT() también realiza conversiones de tipos de datos,
+ pero además ofrece funcionalidades adicionales para gestionar estas conversiones. Por ejemplo:
+ */
+select convert(last_update, date) as fecha_actualizacion
+from film;
+/*
+En este caso, CONVERT() transforma un valor de tipo TIMESTAMP a un tipo de dato DATE.
+
+DIFERENCIAS CLAVE:
+1.Conversión de conjuntos de caracteres: Si es necesario realizar conversiones de conjuntos de caracteres junto con la conversión de tipos de datos,
+se recomienda utilizar CONVERT(), esto debido a que este nos permite especificar el conjunto de caracteres por medio de la cláusula USING.
+
+2.Compatibilidad: CAST() es parte del estándar SQL y es ampliamente compatible con diferentes sistemas de bases de datos,
+por su lado CONVERT() es propio de MySQL. Por razones de portabilidad, es preferible usar CAST() en situaciones donde se desee mantener
+la compatibilidad con otros sistemas.*/
+
+#6
+/*
+Las funciones NVL(), ISNULL(), IFNULL() y COALESCE() se emplean en diferentes motores de bases de datos 
+para manejar valores nulos o desconocidos en las consultas.
+
+NVL():
+Específica de Oracle, esta función se utiliza para sustituir un valor nulo por un valor especificado. Ejemplo:*/
+SELECT NVL(columna, 'DESCONOCIDO') FROM tabla;
+
+/*
+ISNULL():
+Propia de Microsoft SQL Server, esta función evalúa si una expresión es nula y, en tal caso, devuelve un valor alternativo. Ejemplo:*/
+SELECT ISNULL(columna, 'DESCONOCIDO') FROM tabla;
+
+/*
+IFNULL():
+Específica de MySQL, funciona de manera similar a las funciones anteriores, reemplazando un valor nulo con otro valor. Ejemplo:*/
+SELECT IFNULL(original_language_id, 'DESCONOCIDO')
+FROM FILM;
+
+/*
+En este ejemplo, se busca el valor de la columna original_language_id y, si es nulo, se reemplaza con 'DESCONOCIDO'.
+COALESCE():
+Esta función es más genérica y tiene una mayor compatibilidad con diversos motores de bases de datos. 
+Su propósito es devolver el primer valor no nulo en una lista de expresiones. Ejemplo:
+*/
+SELECT FILM_ID, COALESCE(original_language_id, 'NO DATA') AS ORIGINAL_LANGUAGE
+FROM FILM;
+/*
+En este ejemplo, la función evalúa la columna original_language_id, y si su valor es nulo, 
+lo reemplaza con 'NO DATA'. Cabe destacar que el valor de reemplazo puede ser otra columna, 
+permitiendo sustituir un valor nulo con el valor de otra columna.
+*/
