@@ -1,0 +1,94 @@
+#1
+insert into employees (employeeNumber,lastName,firstName, extension,officeCode,reportsTo,jobTitle,email)
+values (1001, 'reina', 'teo', 'x1234', 1, 1002, 'VP Sales ', null);
+
+#Error Code: 1048. Column 'email' cannot be null. La columna no permite NULL (NOT NULL), la inserción va a fracasar y se generará un error
+
+#2
+
+update employees set employeeNumber = employeeNumber - 20;
+
+#La consulta reduce el staff_id en 20 para todos los registros de la tabla staff
+#(podría causar un conflicto si dos empleados terminan con el mismo staff_id) 
+
+update employees set employeeNumber = employeeNumber + 20;
+
+#La consulta suma 20 a cada staff_id. Si se ejecuta después de la primera consulta, debería restaurar los valores originales de staff_id
+#(podría causar un conflicto si dos empleados terminan con el mismo staff_id) 
+
+#3
+
+alter table employees
+add column age int default 16, 
+add constraint check_age check (age between 16 and 70);
+
+# add column age int default 16: añade una nueva columna age de tipo entero (int) con un valor que por defecto es 16
+# add constraint check_age check (age between 16 and 70): añade una restricción (check) que asegura que los valores en la columna age estén entre 16 y 70
+
+#4
+
+#Integridad referencial:
+#film_actor.film_id es una clave foránea que referencia a film.film_id
+#film_actor.actor_id es una clave foránea que referencia a actor.actor_id
+
+#5
+
+#agregar la columna lastUpdate
+alter table employees add column lastUpdate datetime default current_timestamp;
+
+#crear el trigger para actualizar lastUpdate en cada inserción
+create trigger before_employee_insert
+before insert on employees
+for each row
+set new.lastUpdate = current_timestamp;
+
+#crear el trigger para actualizar lastUpdate en cada actualización
+create trigger before_employee_update
+before update on employees
+for each row
+set new.lastUpdate = current_timestamp;
+
+#agregar la columna lastUpdateUser
+alter table employees add column lastUpdateUser varchar(255);
+
+#crear el trigger para registrar el usuario que realiza la inserción
+create trigger before_employee_insert_user
+before insert on employees
+for each row
+set new.lastUpdateUser = user();
+
+#crear el trigger para registrar el usuario que realiza la actualización
+create trigger before_employee_update_user
+before update on employees
+for each row
+set new.lastUpdateUser = user();
+
+
+insert into employees (employeeNumber,lastName,firstName, extension,officeCode,reportsTo,jobTitle,email)
+values (1001, 'reina', 'teo', 'x1234', 1, 1002, 'VP Sales ', null);
+#Ejemplo de inserción
+insert into employees (employeeNumber,lastName,firstName,extension,officeCode,reportsTo,jobTitle,email) 
+values (1020,'fra','juan','x123','4',1005,'VP Sales','fran.juan@gmail.com');
+
+#Ejemplo de actualización
+update employees
+set lastName = 'mendez',firstName = 'fabricio',extension = 'x789',officeCode = '1',reportsTo = 1006,jobTitle = 'project manager',email = 'mendez.fabricio@gmail.com'
+where employeeNumber = 1020;
+
+
+#6
+
+SHOW TRIGGERS FROM sakila;
+
+#ins_film_text: este trigger se activa después de que se inserte un nuevo registro en la tabla film, y actualiza o inserta el registro correspondiente en film_text
+# 'ins_film', 'INSERT', 'film', 'BEGIN\n    INSERT INTO film_text (film_id, title, description)\n        VALUES (new.film_id, new.title, new.description);\n  END', 'AFTER', '2024-04-09 12:43:18.13', 'STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,TRADITIONAL,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION', 'joaco@%', 'utf8mb4', 'utf8mb4_general_ci', 'latin1_swedish_ci'
+
+#upd_film_text: este trigger se activa después de que se actualiza un registro en la tabla film, asegurando que la información en film_text se mantenga sincronizada
+# 'upd_film', 'UPDATE', 'film', 'BEGIN\n    IF (old.title != new.title) OR (old.description != new.description) OR (old.film_id != new.film_id)\n    THEN\n        UPDATE film_text\n            SET title=new.title,\n                description=new.description,\n                film_id=new.film_id\n        WHERE film_id=old.film_id;\n    END IF;\n  END', 'AFTER', '2024-04-09 12:43:18.16', 'STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,TRADITIONAL,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION', 'joaco@%', 'utf8mb4', 'utf8mb4_general_ci', 'latin1_swedish_ci'
+
+#del_film_text: este trigger se activa después de que se elimina un registro en la tabla film, eliminando el registro correspondiente en film_text
+# 'del_film', 'DELETE', 'film', 'BEGIN\n    DELETE FROM film_text WHERE film_id = old.film_id;\n  END', 'AFTER', '2024-04-09 12:43:18.17', 'STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,TRADITIONAL,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION', 'joaco@%', 'utf8mb4', 'utf8mb4_general_ci', 'latin1_swedish_ci'
+
+
+
+#Alumno: Asis Tomas 7C
