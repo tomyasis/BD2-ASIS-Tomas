@@ -1,0 +1,67 @@
+use sakila;
+
+create view list_of_customers as
+select c.customer_id, concat(c.first_name, ' ', c.last_name) as customer_full_name, a.address, a.postal_code as zip_code, a.phone, ci.city, co.country, c.store_id,
+case when c.active = 1 then 'active'
+else 'inactive' end as status
+from customer c
+inner join address a on (a.address_id = c.address_id)
+inner join city ci on (ci.city_id = a.city_id)
+inner join country co on (co.country_id = ci.country_id);
+
+SELECT * FROM list_of_customers;
+
+#2
+create view film_details as 
+select f.film_id, f.title, f.description, f.length, f.rating, c.name as category, f.rental_rate AS price,  GROUP_CONCAT(CONCAT(a.first_name, ' ', a.last_name) SEPARATOR ', ') AS actors 
+from film f 
+inner join film_category fc on (fc.film_id = f.film_id)
+inner join category c on (c.category_id = fc.category_id)
+inner join film_actor fa on (fa.film_id = f.film_id)
+inner join actor a on (a.actor_id = fa.actor_id)
+group by f.film_id, f.title, f.description, c.name, f.rental_rate, f.length, f.rating;
+
+Select * from film_details;
+
+#3
+create view sales_by_film_category as
+select c.name as category, sum(rental_rate) as total_ventas, f.title
+from film f 
+inner join film_category fc on (fc.film_id = f.film_id)
+inner join category c on (c.category_id = fc.category_id)
+group by c.name;
+
+select * from sales_by_film_category;
+
+#4
+create view actor_information as 
+select count(fa.film_id) as film_count, a.actor_id, a.first_name, a.last_name 
+from actor a 
+inner join film_actor fa on (fa.actor_id = a.actor_id)
+group by a.actor_id, a.first_name, a.last_name
+order by actor_id;
+
+select * from actor_information
+
+#5
+
+#GROUP_CONCAT: Combina los nombres de las películas y sus categorías en una sola cadena por cada actor.
+#Uniones (inner joins): Se conectan las tablas de actores, películas y categorías para obtener los títulos y categorías de las películas en las que ha participado cada actor.
+#GROUP BY: Agrupa los resultados por actor, asegurando que cada uno aparezca en una única fila con todas sus películas listadas.
+
+#6
+
+#Una vista materializada es un tipo especial de vista en una base de datos que almacena de manera física los resultados de una consulta. A diferencia de las vistas convencionales, que son ejecutadas cada vez que se accede a ellas, las vistas materializadas mantienen una copia de los datos, evitando el recalculo en cada acceso. Esto puede mejorar notablemente el rendimiento en consultas complejas o con grandes volúmenes de datos.
+
+#Alternativas a las vistas materializadas:
+#Vistas convencionales (standard views)
+#Índices
+#Tablas temporales
+#Tablas desnormalizadas
+
+#Sistemas de gestión de bases de datos (DBMS) que soportan vistas materializadas:
+#Oracle
+#PostgreSQL
+#SQL Server
+
+# Alumno Asis Tomas 7C
