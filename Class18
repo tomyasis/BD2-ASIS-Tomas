@@ -1,0 +1,67 @@
+/*
+Alumno: Tomas Asis
+Curso: 7C
+*/
+
+#1
+use sakila;
+drop procedure if exists countFilms;
+delimiter $$
+create procedure countFilms(in storeId int, in filmId int)
+	begin
+		select f.title, count(inv.inventory_id) as countfilms, inv.store_id from film f
+		inner join inventory inv on inv.film_id = f.film_id
+		where f.film_id = filmId
+		and inv.store_id = storeId
+		group by f.title, inv.store_id;
+	end $$
+delimiter ;
+
+call countFilms(1, 1);
+
+# 2
+drop procedure if exists getListCustomer;
+delimiter $$
+create procedure getListCustomer(in countryName varchar(100), out listCustomer varchar(255))
+	begin
+		declare finished integer default 0;
+        declare selectedCustomer varchar(255) default "";
+        declare customerCursor cursor for select concat(c.first_name, " " , c.last_name) as customer from customer c
+		inner join address ad on ad.address_id = c.address_id
+		inner join city ci on ci.city_id = ad.city_id
+		inner join country co on co.country_id = ci.country_id
+		where co.country = countryName;
+        
+        declare continue handler
+        for not found set finished = 1;
+        
+		set listCustomer = "";
+        open customerCursor;
+        CustomerString: loop
+			fetch customerCursor into selectedCustomer;
+            
+            if finished = 1 then
+				leave CustomerString;
+			end if;
+            if not selectedCustomer is null then
+            
+				set listCustomer = concat(listCustomer, ";", selectedCustomer);
+			end if ;
+		end loop CustomerString;
+        close customerCursor;
+        select listCustomer;
+    end $$
+delimiter ;
+
+set @listCustomer = "";
+call getListCustomer("Chile", @listCustomer);
+select @listCustomers;
+
+#3
+#Review the function inventory_in_stock and the procedure film_in_stock explain the code, write usage examples.
+
+/*
+La función inventory_in_stock indica si la película que esta siendo proporcionada en los parámetros, está disponible en inventario.
+Por otro lado el procedimiento film_in_stock muestra la cantidad de copias restantes de una película en una tienda en específico.
+
+*/
